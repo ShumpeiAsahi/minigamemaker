@@ -5,5 +5,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup src/index.ts --dts"
+  },
+  "dependencies": {
+    "@pixi/assets": "^7.4.3",
+    "@pixi/events": "7.4.3",
+    "gsap": "^3.13.0",
+    "pixi.js": "^7.4.3"
   }
 }
