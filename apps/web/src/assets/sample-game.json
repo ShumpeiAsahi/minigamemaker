@@ -10,10 +10,8 @@
       { "at": 0,   "action": "show",  "target": "button" },
       { "at": 200, "action": "tween", "target": "button", "to": { "rotation": 6.283 }, "dur": 2600 },
       { "on": "pointertap", "target": "button", "then": [
-        { "action": "sfx",  "asset": "hit" },
-        { "action": "text", "txt": "YOU WIN!", "style": { "fill": "#fff", "fontSize": 64 } },
-        { "action": "end" }
-      ]}
+        { "action": "text", "txt": "YOU WIN!", "style": { "fill": "#fff", "fontSize": 64 } }
+        ]}
     ]
   }
   

@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
 import { gsap } from "gsap";
-import PixiPlugin from "gsap/PixiPlugin";   // ← パスは gsap/PixiPlugin
+import PixiPlugin from "gsap/PixiPlugin";
 import { Assets } from "@pixi/assets";
 import '@pixi/events';  
 
@@ -52,6 +52,14 @@ export class MicroGame {
     this.steps = [...this.data.timeline];
     this.startAt = performance.now();
     this.app.ticker.add(this.tick);
+    this.data.timeline
+  .filter((s): s is Extract<TimelineStep, { on: string }> => "on" in s)
+  .forEach(step => {
+    const sp = this.sprites.get(step.target)! as PIXI.Sprite;
+    sp.on(step.on, () => {
+      step.then.forEach(t => this.exec(t));
+    }, { once: true });
+  });
   }
 
   private async loadAssets(): Promise<void> {
@@ -73,18 +81,15 @@ export class MicroGame {
 
   private buildObjects() {
     this.data.objects.forEach(o => {
-      const tex = this.textures.get(o.asset)!;         // ← Texture 取得
-      const sp  = new PIXI.Sprite(tex);                // 新規 Sprite
+      const tex = this.textures.get(o.asset)!;         
+      const sp  = new PIXI.Sprite(tex);                
       sp.position.set(o.x, o.y);
       sp.anchor.set(o.anchor ?? 0);
       sp.visible = false;
       if (o.interactive) sp.eventMode = 'static'; 
       if (o.interactive) sp.cursor = 'pointer';
-      sp.on('pointertap', () => {
-        console.log('pointertap');
-      });
        
-      this.sprites.set(o.id, sp);                      // o.id で登録
+      this.sprites.set(o.id, sp);                     
       this.app.stage.addChild(sp);
     });
   }
@@ -93,7 +98,6 @@ export class MicroGame {
 
   private tick = () => {
     const now = performance.now() - this.startAt;
-
     if (now > this.data.meta.loopMs) {
       this.reset();
       return;
@@ -123,8 +127,8 @@ export class MicroGame {
         case "tween": {
             const sp = this.sprites.get(step.target)!;
             gsap.to(sp, {
-              duration: step.dur / 1000,    // ms → 秒
-              pixi: step.to as any,         // 例 { rotation: 6.283, x: 400 }
+              duration: step.dur / 1000,    
+              pixi: step.to as any,         
               ease: "quad.inOut"
             });
             break;
@@ -135,12 +139,17 @@ export class MicroGame {
         this.audio.get(step.asset)?.play();
         break;
 
-      case "text":
+      case "text": {
         const txt = new PIXI.Text(step.txt, step.style);
-        txt.anchor.set(0.5);
-        txt.position.set(this.app.screen.width / 2, this.app.screen.height / 2);
+
+        txt.updateText(); 
+
+        txt.pivot.set(txt.width / 2, txt.height / 2);
+        txt.position.set(this.app.screen.width / 2, this.app.screen.height / 8);
+
         this.app.stage.addChild(txt);
         break;
+      }
 
       case "end":
         this.reset();
@@ -149,8 +158,8 @@ export class MicroGame {
   }
 
   private reset() {
-    this.app.stage.removeChildren();  // ← Stage から外すだけ
-    this.sprites.clear();             // ← Texture マップは保持
+    this.app.stage.removeChildren(); 
+    this.sprites.clear();            
     this.steps  = [...this.data.timeline];
     this.buildObjects();
     this.startAt = performance.now();
