@@ -60,6 +60,10 @@ export class MicroGame {
     return this.sprites;
   }
 
+  getApp(): PIXI.Application {
+    return this.app;
+  }
+
   private async loadAssets(): Promise<void> {
     const imageUrls: string[] = [];
     this.data.assets.forEach((a) => {
@@ -79,7 +83,7 @@ export class MicroGame {
 
   private buildObjects() {
     this.data.objects.forEach((o) => {
-      const tex = this.textures.get(o.asset)!;
+      const tex = this.textures.get(o.forms[0].asset_id)!;
       const sp = new PIXI.Sprite(tex);
       sp.position.set(o.x, o.y);
       sp.anchor.set(o.anchor ?? 0);

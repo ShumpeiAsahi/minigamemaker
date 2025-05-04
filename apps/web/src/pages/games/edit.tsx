@@ -27,17 +27,25 @@ import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
   const methods = useForm<GameJSON>({
-    defaultValues: defaultValues,
+    defaultValues: gameData,
   });
 
   const objects = useWatch({ control: methods.control, name: "objects" });
   const assets = useWatch({ control: methods.control, name: "assets" });
 
+  // エディタの初期化と更新
   useEffect(() => {
     if (!mountRef.current) return;
-    const editor = new Editor(methods.getValues(), mountRef.current);
+    const editor = new Editor(
+      methods.getValues(),
+      mountRef.current,
+      (id, x, y) => {
+        methods.setValue(`objects.${id}.x`, x);
+        methods.setValue(`objects.${id}.y`, y);
+      },
+    );
     editor.init();
-  }, [methods.getValues]);
+  }, [objects, methods.getValues, methods.setValue]);
 
   const handleImageUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -265,6 +273,7 @@ export default function Edit() {
                           {...methods.register(
                             `objects.${index}.forms.${formIndex}.asset_id`,
                           )}
+                          value={form.asset_id}
                         >
                           <option value="">アセットを選択</option>
                           {assets.map((asset) => (
@@ -290,6 +299,7 @@ export default function Edit() {
               </AccordionItem>
             ))}
           </Accordion>
+          <Heading size="md">プログラム</Heading>
           <Box ref={mountRef} />
         </VStack>
       </Box>

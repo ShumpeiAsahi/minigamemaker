@@ -11,9 +11,14 @@ gsap.registerPlugin(PixiPlugin);
 export class Editor {
   private game: MicroGame;
   private selected?: PIXI.Sprite;
-
-  constructor(data: GameJSON, mount: HTMLElement) {
+  private mount: HTMLElement;
+  constructor(
+    data: GameJSON,
+    mount: HTMLElement,
+    private onPositionUpdate: (id: string, x: number, y: number) => void,
+  ) {
     this.game = new MicroGame(data, mount);
+    this.mount = mount;
   }
 
   async init() {
@@ -31,6 +36,7 @@ export class Editor {
 
       sp.on("pointerdown", this.onSelect);
     });
+    this.enableDrag();
   }
 
   private onSelect = (e: PIXI.FederatedPointerEvent) => {
@@ -50,4 +56,40 @@ export class Editor {
     this.game.getApp().stage.on("pointermove", onMove);
     this.game.getApp().stage.on("pointerup", onUp);
   };
+
+  private enableDrag() {
+    const sprites = this.game.getSprites();
+    console.log(sprites);
+
+    sprites.forEach((sp) => {
+      console.log(sp);
+      const id = [...this.game.getSprites().entries()].find(
+        ([, s]) => s === sp,
+      )?.[0];
+      console.log(id);
+      if (!id) return;
+
+      sp.eventMode = "static";
+      sp.cursor = "move";
+
+      console.log(sp.eventMode);
+      console.log(sp.cursor);
+
+      sp.on("pointerdown", (e: PIXI.FederatedPointerEvent) => {
+        console.log("pointerdown");
+        const onMove = (ev: PIXI.FederatedPointerEvent) => {
+          sp.position.set(ev.globalX, ev.globalY);
+        };
+        const onUp = () => {
+          console.log("onUp");
+          sp.off("pointermove", onMove);
+          sp.off("pointerup", onUp);
+          this.onPositionUpdate(id, sp.x, sp.y); // ← React Hook Form に通知
+        };
+
+        sp.on("pointermove", onMove);
+        sp.on("pointerup", onUp);
+      });
+    });
+  }
 }
