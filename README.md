@@ -2,7 +2,7 @@
 
 ## 概要
 
-このプロジェクトは、"メイドイン俺" のように誰でも簡単にミニゲームを作成・公開できる Web アプリケーションを目指しています。  
+このプロジェクトは、"メイドイン俺" のように誰でも簡単にミニゲームを作成・公開できる Web アプリケーションを目指しています。
 ユーザーは JSON 形式でゲームを構成し、それをランタイムが実行します。
 
 ## 技術構成
@@ -17,26 +17,25 @@ monorepo/
 └── tsconfig.base.json / eslint 設定など
 ```
 
-
 ### フロントエンド (apps/web)
 
-- **フレームワーク**: React + Vite
-- **言語**: TypeScript
-- **スタイリング**: TODO: Tailwind CSS or CSS Modules（未定）
-- **状態管理**: TODO: Zustand or React Context（未定）
+* **フレームワーク**: React + Vite
+* **言語**: TypeScript
+* **スタイリング**: Chakra UI
+* **状態管理**: TODO: Zustand or React Context（未定）
 
 ### ゲームランタイム (packages/runtime)
 
-- **ベースライブラリ**: [PixiJS v7+](https://pixijs.com/)
-- **アニメーション**: [GSAP + PixiPlugin](https://greensock.com/docs/v3/Plugins/PixiPlugin)
-- **アセット管理**: `@pixi/assets`
-- **インタラクション**: `@pixi/events`
+* **ベースライブラリ**: [PixiJS v7+](https://pixijs.com/)
+* **アニメーション**: [GSAP + PixiPlugin](https://greensock.com/docs/v3/Plugins/PixiPlugin)
+* **アセット管理**: `@pixi/assets`
+* **インタラクション**: `@pixi/events`
 
 ### モジュール構成
 
-- `GameJSON` に基づいてゲームを定義
-- ランタイムは `PIXI.Application` を生成し、JSONに沿ってゲームオブジェクトを構築
-- `timeline` に基づいて順序制御・イベント駆動制御を実行
+* `GameJSON` に基づいてゲームを定義
+* ランタイムは `PIXI.Application` を生成し、JSONに沿ってゲームオブジェクトを構築
+* `timeline` に基づいて順序制御・イベント駆動制御を実行
 
 ### ビルド・実行
 
@@ -47,32 +46,26 @@ pnpm build     # ビルド
 ```
 
 ## 今後の方針・TODO
-- ゲームエディタのUI構築（ドラッグ&ドロップ or JSONエディタ）
 
-- 投稿・共有機能（OGP生成・URL共有）
+* ゲームエディタのUI構築（ドラッグ&ドロップ or JSONエディタ）
 
-- モデレーション戦略（全年齢向けコンテンツの保護）
+* 投稿・共有機能（OGP生成・URL共有）
 
-- 収益化方針：広告 / プレミアム機能 / NFT対応（？）
+* モデレーション戦略（全年齢向けコンテンツの保護）
 
-- スマホ最適化対応
+* 収益化方針：広告 / プレミアム機能 / NFT対応（？）
 
-- JSONスキーマバリデーションの導入
+* スマホ最適化対応
 
-- セーブ・ロード機能
+* JSONスキーマバリデーションの導入
 
-- ゲームテンプレートのプリセット化
+* セーブ・ロード機能
 
-- 将来的なWebAssembly対応？（TODO: パフォーマンスが必要な場合）
+* ゲームテンプレートのプリセット化
 
+* 将来的なWebAssembly対応？（TODO: パフォーマンスが必要な場合）
 
 ## ライセンス・注意事項
+
 このプロジェクトは個人による創作支援目的のツールです。任天堂および他社ゲームとは一切関係ありません。
-
-必要に応じて項目を追加・修正します！`エディタの機能` や `ゲーム投稿周り` の仕様が固まっていれば教えてください。追記できます。
-
-
-
-
-
 

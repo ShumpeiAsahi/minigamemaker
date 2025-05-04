@@ -35,9 +35,9 @@ export class MicroGame {
 
   constructor(private data: GameJSON, private mount: HTMLElement) {}
 
-  async run() {
+  async ready() {
     const { width, height, bgColor } = this.data.meta;
-
+  
     this.app = new PIXI.Application({
       width, height,
       background: bgColor,
@@ -45,22 +45,26 @@ export class MicroGame {
     });
     this.mount.innerHTML = "";
     this.mount.appendChild(this.app.view as HTMLCanvasElement);
-
+  
     await this.loadAssets();
-    this.buildObjects();
-
-    this.steps = [...this.data.timeline];
-    this.startAt = performance.now();
-    this.app.ticker.add(this.tick);
-    this.data.timeline
-  .filter((s): s is Extract<TimelineStep, { on: string }> => "on" in s)
-  .forEach(step => {
-    const sp = this.sprites.get(step.target)! as PIXI.Sprite;
-    sp.on(step.on, () => {
-      step.then.forEach(t => this.exec(t));
-    }, { once: true });
-  });
+    this.buildObjects();  
   }
+
+  async run() {
+  this.steps = [...this.data.timeline];
+  this.startAt = performance.now();
+  this.app.ticker.add(this.tick);
+
+  this.data.timeline
+    .filter((s): s is Extract<TimelineStep, { on: string }> => "on" in s)
+    .forEach(step => {
+      const sp = this.sprites.get(step.target)! as PIXI.Sprite;
+      sp.on(step.on, () => {
+        step.then.forEach(t => this.exec(t));
+      }, { once: true });
+    });
+}
+
 
   private async loadAssets(): Promise<void> {
     const imageUrls: string[] = [];
