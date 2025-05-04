@@ -10,14 +10,15 @@ gsap.registerPlugin(PixiPlugin);
 
 export class Editor {
   private game: MicroGame;
-  private selected?: PIXI.Sprite;
   private mount: HTMLElement;
+  private spritePositions = new Map<string, { x: number; y: number }>();
+
   constructor(
     data: GameJSON,
     mount: HTMLElement,
     private onPositionUpdate: (id: string, x: number, y: number) => void,
   ) {
-    this.game = new MicroGame(data, mount);
+    this.game = new MicroGame(data, mount, true);
     this.mount = mount;
   }
 
@@ -27,73 +28,45 @@ export class Editor {
   }
 
   updateGameJSON(data: GameJSON) {
-    const sprites = this.game.getSprites();
-    for (const [id, sprite] of sprites) {
-      const object = data.objects.find((obj) => obj.id === id);
-      if (object) {
-        sprite.position.set(object.x, object.y);
-      }
+    for (const [id, sprite] of this.game.getSprites()) {
+      this.spritePositions.set(id, { x: sprite.x, y: sprite.y });
     }
+
+    this.game = new MicroGame(data, this.mount, true);
+    this.game.ready().then(() => {
+      this.setupEditorMode();
+    });
   }
 
   private setupEditorMode() {
     const sprites = this.game.getSprites();
+    for (const [id, sprite] of sprites) {
+      const savedPosition = this.spritePositions.get(id);
+      if (savedPosition) {
+        sprite.position.set(savedPosition.x, savedPosition.y);
+      }
 
-    sprites.forEach((sp) => {
-      sp.eventMode = "static";
-      sp.cursor = "move";
-      sp.visible = true;
+      sprite.eventMode = "static";
+      sprite.cursor = "move";
+      sprite.visible = true;
 
-      sp.on("pointerdown", this.onSelect);
-    });
-    this.enableDrag();
-  }
+      sprite.removeAllListeners();
 
-  private onSelect = (e: PIXI.FederatedPointerEvent) => {
-    this.selected = e.currentTarget as PIXI.Sprite;
-
-    const onMove = (ev: PIXI.FederatedPointerEvent) => {
-      if (!this.selected) return;
-      this.selected.position.set(ev.globalX, ev.globalY);
-    };
-
-    const onUp = () => {
-      this.selected = undefined;
-      this.game.getApp().stage.off("pointermove", onMove);
-      this.game.getApp().stage.off("pointerup", onUp);
-    };
-
-    this.game.getApp().stage.on("pointermove", onMove);
-    this.game.getApp().stage.on("pointerup", onUp);
-  };
-
-  private enableDrag() {
-    const sprites = this.game.getSprites();
-
-    sprites.forEach((sp) => {
-      const id = [...this.game.getSprites().entries()].find(
-        ([, s]) => s === sp,
-      )?.[0];
-      if (!id) return;
-
-      sp.eventMode = "static";
-      sp.cursor = "move";
-
-      sp.on("pointerdown", (e: PIXI.FederatedPointerEvent) => {
-        console.log("pointerdown");
+      sprite.on("pointerdown", (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
         const onMove = (ev: PIXI.FederatedPointerEvent) => {
-          sp.position.set(ev.globalX, ev.globalY);
+          sprite.position.set(ev.globalX, ev.globalY);
         };
         const onUp = () => {
-          console.log("onUp");
-          sp.off("pointermove", onMove);
-          sp.off("pointerup", onUp);
-          this.onPositionUpdate(id, sp.x, sp.y);
+          sprite.off("pointermove", onMove);
+          sprite.off("pointerup", onUp);
+          this.onPositionUpdate(id, sprite.x, sprite.y);
+          this.spritePositions.set(id, { x: sprite.x, y: sprite.y });
         };
 
-        sp.on("pointermove", onMove);
-        sp.on("pointerup", onUp);
+        sprite.on("pointermove", onMove);
+        sprite.on("pointerup", onUp);
       });
-    });
+    }
   }
 }

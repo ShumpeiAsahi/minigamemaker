@@ -36,6 +36,7 @@ export default function Edit() {
   const assets = useWatch({ control: methods.control, name: "assets" });
 
   console.log(objects);
+  console.log(assets);
 
   // エディタの初期化
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function Edit() {
     editorRef.current.init();
   }, []);
 
-  // アセットの変更を監視してエディタを更新
+  // アセットとオブジェクトの変更を監視してエディタを更新
   useEffect(() => {
     if (!editorRef.current) return;
     const currentValues = methods.getValues();
@@ -60,10 +61,12 @@ export default function Edit() {
         asset.id !== gameData.assets[index]?.id ||
         asset.url !== gameData.assets[index]?.url,
     );
-    if (hasAssetChanges) {
+    const hasObjectChanges =
+      currentValues.objects.length !== gameData.objects.length;
+    if (hasAssetChanges || hasObjectChanges) {
       editorRef.current.updateGameJSON(currentValues);
     }
-  }, [assets]);
+  }, [assets, objects]);
 
   const handleImageUpload = (
     event: React.ChangeEvent<HTMLInputElement>,

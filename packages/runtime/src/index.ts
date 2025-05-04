@@ -19,6 +19,7 @@ export class MicroGame {
   constructor(
     private data: GameJSON,
     private mount: HTMLElement,
+    private isEditorMode = false,
   ) {}
 
   async ready() {
@@ -67,8 +68,9 @@ export class MicroGame {
   private async loadAssets(): Promise<void> {
     const imageUrls: string[] = [];
     this.data.assets.forEach((a) => {
-      if (/\.(png|jpg|gif)$/i.test(a.url)) imageUrls.push(a.url);
-      else if (/\.(wav|mp3)$/i.test(a.url))
+      if (/\.(png|jpg|gif)$/i.test(a.url) || a.url.startsWith("data:image/")) {
+        imageUrls.push(a.url);
+      } else if (/\.(wav|mp3)$/i.test(a.url))
         this.audio.set(a.id, new Audio(a.url));
     });
 
@@ -87,7 +89,7 @@ export class MicroGame {
       const sp = new PIXI.Sprite(tex);
       sp.position.set(o.x, o.y);
       sp.anchor.set(o.anchor ?? 0);
-      sp.visible = false;
+      sp.visible = this.isEditorMode;
       if (o.interactive) sp.eventMode = "static";
       if (o.interactive) sp.cursor = "pointer";
 
