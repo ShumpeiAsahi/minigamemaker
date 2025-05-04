@@ -26,6 +26,16 @@ export class Editor {
     this.setupEditorMode();
   }
 
+  updateGameJSON(data: GameJSON) {
+    const sprites = this.game.getSprites();
+    for (const [id, sprite] of sprites) {
+      const object = data.objects.find((obj) => obj.id === id);
+      if (object) {
+        sprite.position.set(object.x, object.y);
+      }
+    }
+  }
+
   private setupEditorMode() {
     const sprites = this.game.getSprites();
 
@@ -59,21 +69,15 @@ export class Editor {
 
   private enableDrag() {
     const sprites = this.game.getSprites();
-    console.log(sprites);
 
     sprites.forEach((sp) => {
-      console.log(sp);
       const id = [...this.game.getSprites().entries()].find(
         ([, s]) => s === sp,
       )?.[0];
-      console.log(id);
       if (!id) return;
 
       sp.eventMode = "static";
       sp.cursor = "move";
-
-      console.log(sp.eventMode);
-      console.log(sp.cursor);
 
       sp.on("pointerdown", (e: PIXI.FederatedPointerEvent) => {
         console.log("pointerdown");
@@ -84,7 +88,7 @@ export class Editor {
           console.log("onUp");
           sp.off("pointermove", onMove);
           sp.off("pointerup", onUp);
-          this.onPositionUpdate(id, sp.x, sp.y); // ← React Hook Form に通知
+          this.onPositionUpdate(id, sp.x, sp.y);
         };
 
         sp.on("pointermove", onMove);

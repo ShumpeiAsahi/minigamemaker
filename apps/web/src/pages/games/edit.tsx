@@ -26,17 +26,21 @@ import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Editor | null>(null);
   const methods = useForm<GameJSON>({
-    defaultValues: gameData,
+    // defaultValues: gameData,
+    defaultValues: defaultValues,
   });
 
   const objects = useWatch({ control: methods.control, name: "objects" });
   const assets = useWatch({ control: methods.control, name: "assets" });
 
-  // エディタの初期化と更新
+  console.log(objects);
+
+  // エディタの初期化
   useEffect(() => {
     if (!mountRef.current) return;
-    const editor = new Editor(
+    editorRef.current = new Editor(
       methods.getValues(),
       mountRef.current,
       (id, x, y) => {
@@ -44,8 +48,22 @@ export default function Edit() {
         methods.setValue(`objects.${id}.y`, y);
       },
     );
-    editor.init();
-  }, [objects, methods.getValues, methods.setValue]);
+    editorRef.current.init();
+  }, []);
+
+  // アセットの変更を監視してエディタを更新
+  useEffect(() => {
+    if (!editorRef.current) return;
+    const currentValues = methods.getValues();
+    const hasAssetChanges = currentValues.assets.some(
+      (asset, index) =>
+        asset.id !== gameData.assets[index]?.id ||
+        asset.url !== gameData.assets[index]?.url,
+    );
+    if (hasAssetChanges) {
+      editorRef.current.updateGameJSON(currentValues);
+    }
+  }, [assets]);
 
   const handleImageUpload = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -322,7 +340,7 @@ const defaultValues: GameJSON = {
       ],
       x: 0,
       y: 0,
-      anchor: 0,
+      anchor: 0.5,
       interactive: true,
     },
   ],
