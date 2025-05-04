@@ -5,6 +5,7 @@ export type GameJSON = {
   assets: { id: string; url: string }[];
   objects: {
     id: string;
+    name: string;
     asset: string;
     x: number;
     y: number;

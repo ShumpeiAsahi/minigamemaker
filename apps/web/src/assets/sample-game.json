@@ -4,7 +4,7 @@
       { "id": "btn", "url": "/game_kakin.png" }
     ],
     "objects": [
-      { "id": "button", "asset": "btn", "x": 270, "y": 480, "anchor": 0.5, "interactive": true }
+      { "id": "button", "name": "ボタン", "asset": "btn", "x": 270, "y": 480, "anchor": 0.5, "interactive": true }
     ],
     "timeline": [
       { "at": 0,   "action": "show",  "target": "button" },
