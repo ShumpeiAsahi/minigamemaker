@@ -6,13 +6,25 @@ export type GameJSON = {
   objects: {
     id: string;
     name: string;
-    asset: string;
+    forms: Form[];
     x: number;
     y: number;
     anchor?: number;
     interactive?: boolean;
   }[];
   timeline: TimelineStep[];
+};
+
+export type Form = {
+  index: number;
+  name: string;
+  asset_id?: string;
+};
+
+export type Asset = {
+  id: string;
+  name: string;
+  url: string;
 };
 
 export type TimelineStep =

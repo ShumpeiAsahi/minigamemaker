@@ -7,31 +7,135 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  Image,
+  Input,
+  FormLabel,
+  Icon,
+  Center,
+  Select,
+  Button,
+  HStack,
+  VStack,
 } from "@chakra-ui/react";
 import { Editor } from "../../../../../packages/runtime/src/editor";
 import { useEffect, useRef } from "react";
 import gameData from "../../assets/sample-game.json";
 import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
+import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
-
   const methods = useForm<GameJSON>({
-    defaultValues: gameData,
+    defaultValues: defaultValues,
   });
 
   const objects = useWatch({ control: methods.control, name: "objects" });
+  const assets = useWatch({ control: methods.control, name: "assets" });
 
   useEffect(() => {
     if (!mountRef.current) return;
-    const editor = new Editor(methods.getValues(), mountRef.current); // JSONを取得して渡す
+    const editor = new Editor(methods.getValues(), mountRef.current);
     editor.init();
+  }, [methods.getValues]);
 
-    return () => {
-      // editor.destroy() があるならここで呼ぶ
+  const handleImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    formIndex: number,
+    objectIndex: number,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // ファイルをBase64に変換
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      if (!base64) return;
+
+      // 新しいアセットIDを生成
+      const assetId = `asset_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // 現在のアセットとオブジェクトを取得
+      const currentAssets = methods.getValues("assets");
+      const currentObjects = methods.getValues("objects");
+
+      // 新しいアセットを追加
+      methods.setValue("assets", [
+        ...currentAssets,
+        {
+          id: assetId,
+          name: file.name,
+          url: base64,
+        },
+      ]);
+
+      // フォームのasset_idを更新
+      methods.setValue(
+        `objects.${objectIndex}.forms.${formIndex}.asset_id`,
+        assetId,
+      );
     };
-  }, []);
+    reader.readAsDataURL(file);
+  };
+
+  const addForm = (objectIndex: number) => {
+    const currentForms = methods.getValues(`objects.${objectIndex}.forms`);
+    if (currentForms.length >= 4) return;
+
+    methods.setValue(`objects.${objectIndex}.forms`, [
+      ...currentForms,
+      {
+        index: currentForms.length,
+        name: `フォーム${currentForms.length + 1}`,
+      },
+    ]);
+  };
+
+  const removeForm = (objectIndex: number, formIndex: number) => {
+    const currentForms = methods.getValues(`objects.${objectIndex}.forms`);
+    const newForms = currentForms.filter((_, index) => index !== formIndex);
+
+    // インデックスを振り直す
+    const updatedForms = newForms.map((form, index) => ({
+      ...form,
+      index,
+    }));
+
+    methods.setValue(`objects.${objectIndex}.forms`, updatedForms);
+  };
+
+  const addObject = () => {
+    const currentObjects = methods.getValues("objects");
+    if (currentObjects.length >= 16) return;
+
+    const newObjectId = `object_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    methods.setValue("objects", [
+      ...currentObjects,
+      {
+        id: newObjectId,
+        name: `オブジェクト${currentObjects.length + 1}`,
+        forms: [
+          {
+            index: 0,
+            name: "フォーム1",
+          },
+        ],
+        x: 0,
+        y: 0,
+        anchor: 0,
+        interactive: true,
+      },
+    ]);
+  };
+
+  const removeObject = (objectIndex: number) => {
+    const currentObjects = methods.getValues("objects");
+    const newObjects = currentObjects.filter(
+      (_, index) => index !== objectIndex,
+    );
+    methods.setValue("objects", newObjects);
+  };
 
   return (
     <FormProvider {...methods}>
@@ -48,37 +152,169 @@ export default function Edit() {
           },
         }}
       >
-        <Heading size="lg" mb={4}>
-          ゲームエディタ
-        </Heading>
-        <Heading size="md" mb={4}>
-          オブジェクト
-        </Heading>
-        <Accordion allowMultiple>
-          {objects.map((object) => (
-            <AccordionItem key={object.id}>
-              <h2>
-                <AccordionButton>
-                  <Box flex="1" textAlign="left">
-                    {object.name}
+        <VStack spacing={4} align="stretch">
+          <Heading size="lg">ゲームエディタ</Heading>
+
+          <HStack justify="space-between" align="center">
+            <Heading size="md">オブジェクト</Heading>
+            {objects.length < 16 && (
+              <Button
+                leftIcon={<Icon as={FaPlus} />}
+                size="sm"
+                onClick={addObject}
+              >
+                オブジェクトを追加
+              </Button>
+            )}
+          </HStack>
+
+          <Accordion allowMultiple>
+            {objects.map((object, index) => (
+              <AccordionItem key={object.id}>
+                <h2>
+                  <AccordionButton>
+                    <Box flex="1" textAlign="left">
+                      {object.name}
+                    </Box>
+                    <HStack spacing={2}>
+                      {objects.length > 1 && (
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeObject(index);
+                          }}
+                        >
+                          <Icon as={FaTrash} />
+                        </Button>
+                      )}
+                      <AccordionIcon />
+                    </HStack>
+                  </AccordionButton>
+                </h2>
+                <AccordionPanel pb={4}>
+                  <Box mb={4}>
+                    <FormLabel htmlFor={`objects.${index}.name`}>
+                      名前
+                    </FormLabel>
+                    <Input
+                      id={`objects.${index}.name`}
+                      {...methods.register(`objects.${index}.name`)}
+                    />
                   </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb={4}>
-                <Text>アセット: {object.asset}</Text>
-                <Text>X座標: {object.x}</Text>
-                <Text>Y座標: {object.y}</Text>
-                <Text>アンカー: {object.anchor}</Text>
-                <Text>
-                  インタラクティブ: {object.interactive ? "はい" : "いいえ"}
-                </Text>
-              </AccordionPanel>
-            </AccordionItem>
-          ))}
-        </Accordion>
-        <Box ref={mountRef} />
+                  {object.forms.map((form, formIndex) => {
+                    const assetUrl = methods
+                      .getValues()
+                      .assets.find((asset) => asset.id === form.asset_id)?.url;
+                    return (
+                      <Box key={form.index} mb={4}>
+                        <HStack justify="space-between" mb={2}>
+                          <Text>{`フォーム${form.index + 1}`}</Text>
+                          {object.forms.length > 1 && (
+                            <Button
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => removeForm(index, formIndex)}
+                            >
+                              <Icon as={FaTrash} />
+                            </Button>
+                          )}
+                        </HStack>
+                        <Box position="relative" mb={2}>
+                          {assetUrl ? (
+                            <Image src={assetUrl} alt={form.name} w="100px" />
+                          ) : (
+                            <Center
+                              w="100px"
+                              h="100px"
+                              bg="gray.100"
+                              borderRadius="md"
+                              border="1px dashed"
+                              borderColor="gray.300"
+                              cursor="pointer"
+                              _hover={{ bg: "gray.200" }}
+                            >
+                              <Icon as={FaImage} w={8} h={8} color="gray.400" />
+                            </Center>
+                          )}
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            position="absolute"
+                            top="0"
+                            left="0"
+                            w="100px"
+                            h="100px"
+                            opacity="0"
+                            cursor="pointer"
+                            onChange={(e) =>
+                              handleImageUpload(e, formIndex, index)
+                            }
+                          />
+                        </Box>
+                        <FormLabel
+                          htmlFor={`objects.${index}.forms.${formIndex}.asset_id`}
+                        >
+                          アセット
+                        </FormLabel>
+                        <Select
+                          id={`objects.${index}.forms.${formIndex}.asset_id`}
+                          {...methods.register(
+                            `objects.${index}.forms.${formIndex}.asset_id`,
+                          )}
+                        >
+                          <option value="">アセットを選択</option>
+                          {assets.map((asset) => (
+                            <option key={asset.id} value={asset.id}>
+                              {asset.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </Box>
+                    );
+                  })}
+                  {object.forms.length < 4 && (
+                    <Button
+                      leftIcon={<Icon as={FaPlus} />}
+                      size="sm"
+                      onClick={() => addForm(index)}
+                      mb={4}
+                    >
+                      フォームを追加
+                    </Button>
+                  )}
+                </AccordionPanel>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          <Box ref={mountRef} />
+        </VStack>
       </Box>
     </FormProvider>
   );
 }
+
+const defaultValues: GameJSON = {
+  meta: { width: 540, height: 960, bgColor: "#1099bb", loopMs: 4000 },
+  assets: [],
+  objects: [
+    {
+      id: "object1",
+      name: "オブジェクト1",
+      forms: [
+        {
+          index: 0,
+          name: "フォーム1",
+        },
+      ],
+      x: 0,
+      y: 0,
+      anchor: 0,
+      interactive: true,
+    },
+  ],
+  timeline: [],
+};
