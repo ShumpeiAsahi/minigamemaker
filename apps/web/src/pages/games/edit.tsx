@@ -24,10 +24,11 @@ import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
 import {
+  buildActionFormLabel,
   buildEventFormLabel,
-  eventTypeToFormLabelMap,
-  getEventType,
+  buildEventFormValue,
 } from "../../utils/events";
+import { AddEventButton } from "../../components/AddEventButton";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -49,10 +50,6 @@ export default function Edit() {
     control: methods.control,
     name: "events",
   }) as GameJSON["events"];
-
-  console.log(objects);
-  console.log(assets);
-  console.log(events);
 
   // エディタの初期化
   useEffect(() => {
@@ -336,7 +333,16 @@ export default function Edit() {
               </AccordionItem>
             ))}
           </Accordion>
-          <Heading size="md">イベント</Heading>
+          <HStack justify="space-between" align="center">
+            <Heading size="md">イベント</Heading>
+            <AddEventButton
+              onAdd={(newEvent) => {
+                const currentEvents = methods.getValues("events");
+                methods.setValue("events", [...currentEvents, newEvent]);
+              }}
+            />
+          </HStack>
+
           <Accordion allowMultiple>
             {events.map((event, index) => {
               const eventTypeLabel = buildEventFormLabel(event, objects);
@@ -351,7 +357,8 @@ export default function Edit() {
                     </AccordionButton>
                   </h2>
                   <AccordionPanel pb={4}>
-                    <Text>イベントの詳細は後で実装します</Text>
+                    <Text>{buildActionFormLabel(event.actions[0])}</Text>
+                    <Text>{buildEventFormValue(event, objects)}</Text>
                   </AccordionPanel>
                 </AccordionItem>
               );

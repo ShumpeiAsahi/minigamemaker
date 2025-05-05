@@ -3,7 +3,7 @@ import { gsap } from "gsap";
 import PixiPlugin from "gsap/PixiPlugin";
 import { Assets } from "@pixi/assets";
 import "@pixi/events";
-import type { GameJSON, TimelineStep } from "./types";
+import type { GameJSON, Event } from "./types";
 
 PixiPlugin.registerPIXI(PIXI);
 gsap.registerPlugin(PixiPlugin);
@@ -12,7 +12,7 @@ export class MicroGame {
   private app!: PIXI.Application;
   private sprites = new Map<string, PIXI.DisplayObject>();
   private audio = new Map<string, HTMLAudioElement>();
-  private steps: TimelineStep[] = [];
+  private events: Event[] = [];
   private startAt = 0;
   private textures = new Map<string, PIXI.Texture>();
 
@@ -39,18 +39,21 @@ export class MicroGame {
   }
 
   async run() {
-    this.steps = [...this.data.timeline];
+    this.events = [...this.data.events];
     this.startAt = performance.now();
     this.app.ticker.add(this.tick);
 
-    this.data.timeline
-      .filter((s): s is Extract<TimelineStep, { on: string }> => "on" in s)
-      .forEach((step) => {
-        const sp = this.sprites.get(step.target)! as PIXI.Sprite;
+    this.data.events
+      .filter(
+        (e): e is Extract<Event, { trigger: { type: "click" } }> =>
+          e.trigger.type === "click",
+      )
+      .forEach((event) => {
+        const sp = this.sprites.get(event.trigger.targetId)! as PIXI.Sprite;
         sp.on(
-          step.on,
+          "pointertap",
           () => {
-            step.then.forEach((t) => this.exec(t));
+            event.actions.forEach((action) => this.exec(action));
           },
           { once: true },
         );
@@ -88,7 +91,7 @@ export class MicroGame {
       const tex = this.textures.get(o.forms[0].asset_id)!;
       const sp = new PIXI.Sprite(tex);
       sp.position.set(o.x, o.y);
-      sp.anchor.set(o.anchor ?? 0);
+      sp.anchor.set(0.5);
       sp.visible = this.isEditorMode;
       if (o.interactive) sp.eventMode = "static";
       if (o.interactive) sp.cursor = "pointer";
@@ -105,48 +108,40 @@ export class MicroGame {
       return;
     }
 
-    this.steps
+    this.events
       .filter(
-        (s): s is Extract<TimelineStep, { at: number }> =>
-          "at" in s && now >= s.at,
+        (e): e is Extract<Event, { trigger: { type: "time" } }> =>
+          e.trigger.type === "time" && now >= e.trigger.at,
       )
-      .forEach((s) => {
-        this.exec(s);
-        this.steps.splice(this.steps.indexOf(s), 1);
+      .forEach((event) => {
+        event.actions.forEach((action) => this.exec(action));
+        this.events.splice(this.events.indexOf(event), 1);
       });
   };
 
-  private exec(step: TimelineStep) {
-    if ("on" in step) {
-      const sp = this.sprites.get(step.target)! as PIXI.Sprite;
-      sp.on(step.on, () => step.then.forEach((t) => this.exec(t)), {
-        once: true,
-      });
-      return;
-    }
-
-    switch (step.action) {
+  private exec(action: Event["actions"][0]) {
+    switch (action.type) {
       case "show":
       case "hide":
-        this.sprites.get(step.target)!.visible = step.action === "show";
+        this.sprites.get(action.target)!.visible = action.type === "show";
         break;
 
       case "tween": {
-        const sp = this.sprites.get(step.target)!;
+        const sp = this.sprites.get(action.target)!;
         gsap.to(sp, {
-          duration: step.dur / 1000,
-          pixi: step.to as any,
+          duration: action.dur / 1000,
+          pixi: action.to as any,
           ease: "quad.inOut",
         });
         break;
       }
 
       case "sfx":
-        this.audio.get(step.asset)?.play();
+        this.audio.get(action.asset)?.play();
         break;
 
       case "text": {
-        const txt = new PIXI.Text(step.txt, step.style);
+        const txt = new PIXI.Text(action.txt, action.style);
 
         txt.updateText();
 
@@ -166,7 +161,7 @@ export class MicroGame {
   private reset() {
     this.app.stage.removeChildren();
     this.sprites.clear();
-    this.steps = [...this.data.timeline];
+    this.events = [...this.data.events];
     this.buildObjects();
     this.startAt = performance.now();
   }
