@@ -4,6 +4,13 @@ import type {
   Object,
 } from "../../../packages/runtime/src/types";
 
+export type TriggerType = "time" | "click";
+
+export const triggerOptions: { value: TriggerType; label: string }[] = [
+  { value: "time", label: "時間経過" },
+  { value: "click", label: "クリック" },
+] as const;
+
 export type ActionType = "show" | "hide" | "tween";
 
 export const actionOptions: { value: ActionType; label: string }[] = [

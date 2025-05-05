@@ -29,6 +29,8 @@ import {
   buildEventFormValue,
 } from "../../utils/events";
 import { AddEventButton } from "../../components/AddEventButton";
+import { TriggerSelect } from "../../components/TriggerSelect";
+import { ActionSelect } from "../../components/ActionSelect";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -357,8 +359,96 @@ export default function Edit() {
                     </AccordionButton>
                   </h2>
                   <AccordionPanel pb={4}>
-                    <Text>{buildActionFormLabel(event.actions[0])}</Text>
-                    <Text>{buildEventFormValue(event, objects)}</Text>
+                    <VStack spacing={4} align="stretch">
+                      <Box>
+                        <FormLabel>トリガー</FormLabel>
+                        <TriggerSelect
+                          value={event.trigger.type}
+                          onChange={(type) => {
+                            const currentEvents = methods.getValues("events");
+                            const updatedEvent = {
+                              ...event,
+                              trigger: {
+                                type,
+                                ...(type === "time"
+                                  ? { at: 0 }
+                                  : { targetId: "" }),
+                              },
+                            };
+                            currentEvents[index] = updatedEvent;
+                            methods.setValue("events", currentEvents);
+                          }}
+                        />
+                      </Box>
+                      {event.trigger.type === "time" && (
+                        <Box>
+                          <FormLabel>時間（秒）</FormLabel>
+                          <Input
+                            type="number"
+                            value={event.trigger.at / 1000}
+                            onChange={(e) => {
+                              const currentEvents = methods.getValues("events");
+                              const updatedEvent = {
+                                ...event,
+                                trigger: {
+                                  ...event.trigger,
+                                  at: Number(e.target.value) * 1000,
+                                },
+                              };
+                              currentEvents[index] = updatedEvent;
+                              methods.setValue("events", currentEvents);
+                            }}
+                          />
+                        </Box>
+                      )}
+                      {event.trigger.type === "click" && (
+                        <Box>
+                          <FormLabel>対象オブジェクト</FormLabel>
+                          <Select
+                            value={event.trigger.targetId}
+                            onChange={(e) => {
+                              const currentEvents = methods.getValues("events");
+                              const updatedEvent = {
+                                ...event,
+                                trigger: {
+                                  ...event.trigger,
+                                  targetId: e.target.value,
+                                },
+                              };
+                              currentEvents[index] = updatedEvent;
+                              methods.setValue("events", currentEvents);
+                            }}
+                          >
+                            <option value="">オブジェクトを選択</option>
+                            {objects.map((object) => (
+                              <option key={object.id} value={object.id}>
+                                {object.name}
+                              </option>
+                            ))}
+                          </Select>
+                        </Box>
+                      )}
+                      <Box>
+                        <FormLabel>アクション</FormLabel>
+                        <ActionSelect
+                          value={event.actions[0].type as ActionType}
+                          onChange={(type) => {
+                            const currentEvents = methods.getValues("events");
+                            const updatedEvent = {
+                              ...event,
+                              actions: [
+                                {
+                                  type,
+                                  target: "",
+                                },
+                              ],
+                            };
+                            currentEvents[index] = updatedEvent;
+                            methods.setValue("events", currentEvents);
+                          }}
+                        />
+                      </Box>
+                    </VStack>
                   </AccordionPanel>
                 </AccordionItem>
               );
