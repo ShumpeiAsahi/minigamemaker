@@ -1,19 +1,48 @@
 {
-    "meta": { "width": 540, "height": 960, "bgColor": "#1099bb", "loopMs": 4000 },
-    "assets": [
-      { "id": "btn", "url": "/game_kakin.png" }
-    ],
-    "objects": [
-      { "id": "button", "name": "ボタン", "forms": [
+  "meta": { "width": 540, "height": 960, "bgColor": "#1099bb", "loopMs": 4000 },
+  "assets": [
+    { "id": "btn", "url": "/game_kakin.png" }
+  ],
+  "objects": [
+    {
+      "id": "button",
+      "name": "ボタン",
+      "forms": [
         { "index": 0, "asset_id": "btn" }
-      ], "x": 270, "y": 480, "anchor": 0.5, "interactive": true }
-    ],
-    "events": [
-      { "at": 0,   "action": "show",  "target": "button" },
-      { "at": 200, "action": "tween", "target": "button", "to": { "rotation": 6.283 }, "dur": 2600 },
-      { "on": "pointertap", "target": "button", "then": [
-        { "action": "text", "txt": "YOU WIN!", "style": { "fill": "#fff", "fontSize": 64 } }
-        ]}
-    ]
-  }
-  
+      ],
+      "x": 270,
+      "y": 480,
+      "anchor": 0.5,
+      "interactive": true
+    }
+  ],
+  "events": [
+    {
+      "trigger": { "type": "time", "at": 0 },
+      "actions": [
+        { "type": "show", "target": "button" }
+      ]
+    },
+    {
+      "trigger": { "type": "time", "at": 200 },
+      "actions": [
+        {
+          "type": "tween",
+          "target": "button",
+          "to": { "rotation": 6.283 },
+          "dur": 2600
+        }
+      ]
+    },
+    {
+      "trigger": { "type": "click", "targetId": "button" },
+      "actions": [
+        {
+          "type": "text",
+          "txt": "YOU WIN!",
+          "style": { "fill": "#fff", "fontSize": 64 }
+        }
+      ]
+    }
+  ]
+}

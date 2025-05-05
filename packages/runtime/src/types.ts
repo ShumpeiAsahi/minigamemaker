@@ -27,16 +27,23 @@ export type Asset = {
   url: string;
 };
 
-export type Event =
-  | { at: number; action: "show" | "hide"; target: string }
+export type Event = {
+  trigger: Trigger;
+  actions: [Action]; // 1つだけだが、将来的に配列拡張できる形
+};
+
+export type Time = { type: "time"; at: number };
+export type Click = { type: "click"; targetId: string };
+export type Trigger = Time | Click;
+
+export type Action =
+  | { type: "show" | "hide"; target: string }
   | {
-      at: number;
-      action: "tween";
+      type: "tween";
       target: string;
       to: Partial<PIXI.DisplayObject>;
       dur: number;
     }
-  | { on: string; target: string; then: Event[] }
-  | { action: "sfx"; asset: string }
-  | { action: "text"; txt: string; style: PIXI.TextStylePartial }
-  | { action: "end" };
+  | { type: "sfx"; asset: string }
+  | { type: "text"; txt: string; style: PIXI.TextStylePartial }
+  | { type: "end" };
