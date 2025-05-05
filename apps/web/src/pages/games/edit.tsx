@@ -23,20 +23,36 @@ import gameData from "../../assets/sample-game.json";
 import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
+import {
+  buildEventFormLabel,
+  eventTypeToFormLabelMap,
+  getEventType,
+} from "../../utils/events";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
   const methods = useForm<GameJSON>({
-    // defaultValues: gameData,
-    defaultValues: defaultValues,
+    defaultValues: gameData,
+    // defaultValues: defaultValues,
   });
 
-  const objects = useWatch({ control: methods.control, name: "objects" });
-  const assets = useWatch({ control: methods.control, name: "assets" });
+  const objects = useWatch({
+    control: methods.control,
+    name: "objects",
+  }) as GameJSON["objects"];
+  const assets = useWatch({
+    control: methods.control,
+    name: "assets",
+  }) as GameJSON["assets"];
+  const events = useWatch({
+    control: methods.control,
+    name: "events",
+  }) as GameJSON["events"];
 
   console.log(objects);
   console.log(assets);
+  console.log(events);
 
   // エディタの初期化
   useEffect(() => {
@@ -320,7 +336,28 @@ export default function Edit() {
               </AccordionItem>
             ))}
           </Accordion>
-          <Heading size="md">プログラム</Heading>
+          <Heading size="md">イベント</Heading>
+          <Accordion allowMultiple>
+            {events.map((event, index) => {
+              const eventTypeLabel = buildEventFormLabel(event, objects);
+              return (
+                <AccordionItem key={index}>
+                  <h2>
+                    <AccordionButton>
+                      <Box flex="1" textAlign="left">
+                        {eventTypeLabel}
+                      </Box>
+                      <AccordionIcon />
+                    </AccordionButton>
+                  </h2>
+                  <AccordionPanel pb={4}>
+                    <Text>イベントの詳細は後で実装します</Text>
+                  </AccordionPanel>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+
           <Box ref={mountRef} />
         </VStack>
       </Box>
@@ -347,5 +384,5 @@ const defaultValues: GameJSON = {
       interactive: true,
     },
   ],
-  timeline: [],
+  events: [],
 };

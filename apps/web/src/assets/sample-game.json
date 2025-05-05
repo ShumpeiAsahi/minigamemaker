@@ -8,7 +8,7 @@
         { "index": 0, "asset_id": "btn" }
       ], "x": 270, "y": 480, "anchor": 0.5, "interactive": true }
     ],
-    "timeline": [
+    "events": [
       { "at": 0,   "action": "show",  "target": "button" },
       { "at": 200, "action": "tween", "target": "button", "to": { "rotation": 6.283 }, "dur": 2600 },
       { "on": "pointertap", "target": "button", "then": [

@@ -3,16 +3,16 @@ import * as PIXI from "pixi.js";
 export type GameJSON = {
   meta: { width: number; height: number; bgColor: string; loopMs: number };
   assets: { id: string; url: string }[];
-  objects: {
-    id: string;
-    name: string;
-    forms: Form[];
-    x: number;
-    y: number;
-    anchor?: number;
-    interactive?: boolean;
-  }[];
-  timeline: TimelineStep[];
+  objects: Object[];
+  events: Event[];
+};
+
+export type Object = {
+  id: string;
+  name: string;
+  forms: Form[];
+  x: number;
+  y: number;
 };
 
 export type Form = {
@@ -27,7 +27,7 @@ export type Asset = {
   url: string;
 };
 
-export type TimelineStep =
+export type Event =
   | { at: number; action: "show" | "hide"; target: string }
   | {
       at: number;
@@ -36,7 +36,7 @@ export type TimelineStep =
       to: Partial<PIXI.DisplayObject>;
       dur: number;
     }
-  | { on: string; target: string; then: TimelineStep[] }
+  | { on: string; target: string; then: Event[] }
   | { action: "sfx"; asset: string }
   | { action: "text"; txt: string; style: PIXI.TextStylePartial }
   | { action: "end" };
