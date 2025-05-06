@@ -18,7 +18,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Editor } from "../../../../../packages/runtime/src/editor";
-import { useEffect, useRef } from "react";
+import { MicroGame } from "../../../../../packages/runtime/src";
+import { useEffect, useRef, useState } from "react";
 import gameData from "../../assets/sample-game.json";
 import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
@@ -35,23 +36,15 @@ import { ActionSelect } from "../../components/ActionSelect";
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const methods = useForm<GameJSON>({
     defaultValues: gameData,
-    // defaultValues: defaultValues,
   });
 
-  const objects = useWatch({
-    control: methods.control,
-    name: "objects",
-  }) as GameJSON["objects"];
-  const assets = useWatch({
-    control: methods.control,
-    name: "assets",
-  }) as GameJSON["assets"];
-  const events = useWatch({
-    control: methods.control,
-    name: "events",
-  }) as GameJSON["events"];
+  const objects = useWatch({ control: methods.control, name: "objects" });
+  const assets = useWatch({ control: methods.control, name: "assets" });
+  const events = useWatch({ control: methods.control, name: "events" });
 
   // エディタの初期化
   useEffect(() => {
@@ -60,8 +53,12 @@ export default function Edit() {
       methods.getValues(),
       mountRef.current,
       (id, x, y) => {
-        methods.setValue(`objects.${id}.x`, x);
-        methods.setValue(`objects.${id}.y`, y);
+        const objectIndex = methods
+          .getValues("objects")
+          .findIndex((object) => object.id === id);
+        if (objectIndex === -1) return;
+        methods.setValue(`objects.${objectIndex}.x`, x);
+        methods.setValue(`objects.${objectIndex}.y`, y);
       },
     );
     editorRef.current.init();
@@ -71,6 +68,7 @@ export default function Edit() {
   useEffect(() => {
     if (!editorRef.current) return;
     const currentValues = methods.getValues();
+    console.log(currentValues);
     const hasAssetChanges = currentValues.assets.some(
       (asset, index) =>
         asset.id !== gameData.assets[index]?.id ||
@@ -179,6 +177,23 @@ export default function Edit() {
       (_, index) => index !== objectIndex,
     );
     methods.setValue("objects", newObjects);
+  };
+
+  const handlePreview = async () => {
+    console.log("handlePreview");
+    if (!previewRef.current) return;
+    setIsPreviewMode(true);
+    console.log(methods.getValues());
+    const game = new MicroGame(methods.getValues(), previewRef.current);
+    await game.ready();
+    game.run(false);
+  };
+
+  const handleStopPreview = () => {
+    setIsPreviewMode(false);
+    if (previewRef.current) {
+      previewRef.current.innerHTML = "";
+    }
   };
 
   return (
@@ -454,15 +469,14 @@ export default function Edit() {
               );
             })}
           </Accordion>
-          <Button
-            onClick={() => {
-              // editorRef.current?.run();
-              mountRef.current?.run();
-            }}
-          >
-            ゲームを再生
-          </Button>
-
+          <HStack justify="space-between">
+            {!isPreviewMode ? (
+              <Button onClick={handlePreview}>ゲームを再生</Button>
+            ) : (
+              <Button onClick={handleStopPreview}>プレビューを停止</Button>
+            )}
+          </HStack>
+          <Box ref={previewRef} />
           <Box ref={mountRef} />
         </VStack>
       </Box>

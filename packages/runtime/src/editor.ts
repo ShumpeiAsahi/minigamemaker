@@ -69,4 +69,8 @@ export class Editor {
       });
     }
   }
+
+  async run() {
+    await this.game.run(false);
+  }
 }

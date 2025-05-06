@@ -38,10 +38,10 @@ export class MicroGame {
     this.buildObjects();
   }
 
-  async run() {
+  async run(loop = true) {
     this.events = [...this.data.events];
     this.startAt = performance.now();
-    this.app.ticker.add(this.tick);
+    this.app.ticker.add(this.tick(loop));
 
     this.data.events
       .filter(
@@ -90,6 +90,7 @@ export class MicroGame {
     this.data.objects.forEach((o) => {
       const tex = this.textures.get(o.forms[0].asset_id)!;
       const sp = new PIXI.Sprite(tex);
+      console.log(o);
       sp.position.set(o.x, o.y);
       sp.anchor.set(0.5);
       sp.visible = this.isEditorMode;
@@ -101,9 +102,9 @@ export class MicroGame {
     });
   }
 
-  private tick = () => {
+  private tick = (loop = true) => {
     const now = performance.now() - this.startAt;
-    if (now > this.data.meta.loopMs) {
+    if (loop && now > this.data.meta.loopMs) {
       this.reset();
       return;
     }
@@ -159,10 +160,32 @@ export class MicroGame {
   }
 
   private reset() {
+    // イベントリスナーのクリーンアップ
+    for (const [_, sprite] of this.sprites) {
+      sprite.removeAllListeners();
+    }
+
     this.app.stage.removeChildren();
     this.sprites.clear();
     this.events = [...this.data.events];
     this.buildObjects();
     this.startAt = performance.now();
+
+    // クリックイベントの再設定
+    this.data.events
+      .filter(
+        (e): e is Extract<Event, { trigger: { type: "click" } }> =>
+          e.trigger.type === "click",
+      )
+      .forEach((event) => {
+        const sp = this.sprites.get(event.trigger.targetId)! as PIXI.Sprite;
+        sp.on(
+          "pointertap",
+          () => {
+            event.actions.forEach((action) => this.exec(action));
+          },
+          { once: true },
+        );
+      });
   }
 }
