@@ -454,6 +454,14 @@ export default function Edit() {
               );
             })}
           </Accordion>
+          <Button
+            onClick={() => {
+              // editorRef.current?.run();
+              mountRef.current?.run();
+            }}
+          >
+            ゲームを再生
+          </Button>
 
           <Box ref={mountRef} />
         </VStack>

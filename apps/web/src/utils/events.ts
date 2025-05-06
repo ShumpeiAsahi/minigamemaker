@@ -8,7 +8,7 @@ export type TriggerType = "time" | "click";
 
 export const triggerOptions: { value: TriggerType; label: string }[] = [
   { value: "time", label: "時間経過" },
-  { value: "click", label: "クリック" },
+  { value: "click", label: "タッチ" },
 ] as const;
 
 export type ActionType = "show" | "hide" | "tween";
@@ -22,15 +22,11 @@ export const actionOptions: { value: ActionType; label: string }[] = [
 export function buildEventFormLabel(event: Event, objects: Object[]): string {
   const triggerType = event.trigger.type;
   const object = objects.find((o) => o.id === event.trigger.targetId);
-
-  if (!object && triggerType === "click") {
-    return "不明なイベント";
-  }
   switch (triggerType) {
     case "time":
       return `${event.trigger.at / 1000}秒経過した時`;
     case "click":
-      return `${object?.name}がクリックされた時`;
+      return `${object?.name ?? "〇〇"}がタッチされた時`;
     default:
       return "不明なイベント";
   }
@@ -46,6 +42,8 @@ export function buildActionFormLabel(action: Action): string {
       return "オブジェクトを動かす";
     case "sfx":
       return "サウンドを再生する";
+    case "click":
+      return "オブジェクトをタッチ";
     case "text":
       return "テキストを表示する";
     case "end":
