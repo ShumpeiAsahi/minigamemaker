@@ -32,6 +32,7 @@ import {
 import { AddEventButton } from "../../components/AddEventButton";
 import { TriggerSelect } from "../../components/TriggerSelect";
 import { ActionSelect } from "../../components/ActionSelect";
+import { ActionSettings } from "../../components/ActionSettings";
 
 export default function Edit() {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -194,6 +195,40 @@ export default function Edit() {
     if (previewRef.current) {
       previewRef.current.innerHTML = "";
     }
+  };
+
+  const handleActionChange = (eventIndex: number, type: string) => {
+    const currentEvents = methods.getValues("events");
+    const updatedEvent = {
+      ...currentEvents[eventIndex],
+      actions: [
+        {
+          type,
+          target: "",
+          ...(type === "tween" && {
+            to: { x: 0, y: 0 },
+            dur: 1000,
+          }),
+        },
+      ],
+    };
+    currentEvents[eventIndex] = updatedEvent;
+    methods.setValue("events", currentEvents);
+  };
+
+  const handleActionSettingsChange = (eventIndex: number, settings: any) => {
+    const currentEvents = methods.getValues("events");
+    const updatedEvent = {
+      ...currentEvents[eventIndex],
+      actions: [
+        {
+          ...currentEvents[eventIndex].actions[0],
+          ...settings,
+        },
+      ],
+    };
+    currentEvents[eventIndex] = updatedEvent;
+    methods.setValue("events", currentEvents);
   };
 
   return (
@@ -446,22 +481,19 @@ export default function Edit() {
                       <Box>
                         <FormLabel>アクション</FormLabel>
                         <ActionSelect
-                          value={event.actions[0].type as ActionType}
-                          onChange={(type) => {
-                            const currentEvents = methods.getValues("events");
-                            const updatedEvent = {
-                              ...event,
-                              actions: [
-                                {
-                                  type,
-                                  target: "",
-                                },
-                              ],
-                            };
-                            currentEvents[index] = updatedEvent;
-                            methods.setValue("events", currentEvents);
-                          }}
+                          value={event.actions[0].type}
+                          onChange={(type) => handleActionChange(index, type)}
                         />
+                        <Box mt={4}>
+                          <ActionSettings
+                            type={event.actions[0].type}
+                            value={event.actions[0]}
+                            objects={objects}
+                            onChange={(settings) =>
+                              handleActionSettingsChange(index, settings)
+                            }
+                          />
+                        </Box>
                       </Box>
                     </VStack>
                   </AccordionPanel>

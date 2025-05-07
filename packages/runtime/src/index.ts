@@ -41,7 +41,16 @@ export class MicroGame {
   async run(loop = true) {
     this.events = [...this.data.events];
     this.startAt = performance.now();
-    this.app.ticker.add(this.tick(loop));
+    this.app.ticker.add(this.tick);
+
+    if (loop) {
+      this.app.ticker.add(() => {
+        const now = performance.now() - this.startAt;
+        if (now > this.data.meta.loopMs) {
+          this.reset();
+        }
+      });
+    }
 
     this.data.events
       .filter(
@@ -102,12 +111,8 @@ export class MicroGame {
     });
   }
 
-  private tick = (loop = true) => {
+  private tick = () => {
     const now = performance.now() - this.startAt;
-    if (loop && now > this.data.meta.loopMs) {
-      this.reset();
-      return;
-    }
 
     this.events
       .filter(
@@ -121,6 +126,7 @@ export class MicroGame {
   };
 
   private exec(action: Event["actions"][0]) {
+    console.log("Executing action:", action);
     switch (action.type) {
       case "show":
       case "hide":
@@ -129,6 +135,8 @@ export class MicroGame {
 
       case "tween": {
         const sp = this.sprites.get(action.target)!;
+        console.log("Tween target:", sp);
+        console.log("Tween properties:", action.to);
         gsap.to(sp, {
           duration: action.dur / 1000,
           pixi: action.to as any,
