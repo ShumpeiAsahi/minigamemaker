@@ -248,7 +248,13 @@ export default function Edit() {
       >
         <VStack spacing={4} align="stretch">
           <Heading size="lg">ゲームエディタ</Heading>
-
+          <HStack justify="space-between" align="center">
+            <Heading size="md">基本設定</Heading>
+          </HStack>
+          <Box>
+            <FormLabel>ゲームタイトル</FormLabel>
+            <Input {...methods.register("meta.title")} />
+          </Box>
           <HStack justify="space-between" align="center">
             <Heading size="md">オブジェクト</Heading>
             {objects.length < 16 && (

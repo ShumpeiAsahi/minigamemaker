@@ -1,7 +1,13 @@
 import * as PIXI from "pixi.js";
 
 export type GameJSON = {
-  meta: { width: number; height: number; bgColor: string; loopMs: number };
+  meta: {
+    width: number;
+    height: number;
+    bgColor: string;
+    loopMs: number;
+    title: string;
+  };
   assets: { id: string; url: string }[];
   objects: Object[];
   events: Event[];

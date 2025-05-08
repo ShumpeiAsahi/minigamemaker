@@ -1,5 +1,5 @@
 {
-  "meta": { "width": 540, "height": 960, "bgColor": "#1099bb", "loopMs": 4000 },
+  "meta": { "width": 540, "height": 960, "bgColor": "#1099bb", "loopMs": 4000, "title": "ゲームタイトル" },
   "assets": [
     { "id": "btn", "url": "/game_kakin.png" }
   ],
