@@ -13,16 +13,22 @@ export type GameJSON = {
     };
   };
   assets: { id: string; url: string }[];
-  objects: Object[];
+  objects: (Object | TextObject)[];
   events: Event[];
 };
 
 export type Object = {
   id: string;
   name: string;
+  type: "text" | "asset";
   forms: Form[];
   x: number;
   y: number;
+};
+
+export type TextObject = Omit<Object, "forms"> & {
+  text: string;
+  style: PIXI.TextStylePartial;
 };
 
 export type Form = {
@@ -55,5 +61,4 @@ export type Action =
       dur: number;
     }
   | { type: "sfx"; asset: string }
-  | { type: "text"; txt: string; style: PIXI.TextStylePartial }
   | { type: "end" };

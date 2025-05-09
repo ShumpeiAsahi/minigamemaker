@@ -97,17 +97,31 @@ export class MicroGame {
 
   private buildObjects() {
     this.data.objects.forEach((o) => {
-      const tex = this.textures.get(o.forms[0].asset_id)!;
-      const sp = new PIXI.Sprite(tex);
-      console.log(o);
-      sp.position.set(o.x, o.y);
-      sp.anchor.set(0.5);
-      sp.visible = this.isEditorMode;
-      if (o.interactive) sp.eventMode = "static";
-      if (o.interactive) sp.cursor = "pointer";
+      if ("text" in o) {
+        // TextObjectの場合
+        const txt = new PIXI.Text(o.text, o.style);
+        txt.updateText();
+        txt.position.set(o.x, o.y);
+        txt.anchor.set(0.5);
+        txt.visible = this.isEditorMode;
+        if (o.interactive) txt.eventMode = "static";
+        if (o.interactive) txt.cursor = "pointer";
 
-      this.sprites.set(o.id, sp);
-      this.app.stage.addChild(sp);
+        this.sprites.set(o.id, txt);
+        this.app.stage.addChild(txt);
+      } else {
+        // 通常のObjectの場合
+        const tex = this.textures.get(o.forms[0].asset_id)!;
+        const sp = new PIXI.Sprite(tex);
+        sp.position.set(o.x, o.y);
+        sp.anchor.set(0.5);
+        sp.visible = this.isEditorMode;
+        if (o.interactive) sp.eventMode = "static";
+        if (o.interactive) sp.cursor = "pointer";
+
+        this.sprites.set(o.id, sp);
+        this.app.stage.addChild(sp);
+      }
     });
   }
 
@@ -148,18 +162,6 @@ export class MicroGame {
       case "sfx":
         this.audio.get(action.asset)?.play();
         break;
-
-      case "text": {
-        const txt = new PIXI.Text(action.txt, action.style);
-
-        txt.updateText();
-
-        txt.pivot.set(txt.width / 2, txt.height / 2);
-        txt.position.set(this.app.screen.width / 2, this.app.screen.height / 8);
-
-        this.app.stage.addChild(txt);
-        break;
-      }
 
       case "end":
         this.reset();

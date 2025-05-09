@@ -306,80 +306,142 @@ export default function Edit() {
                       {...methods.register(`objects.${index}.name`)}
                     />
                   </Box>
-                  {object.forms.map((form, formIndex) => {
-                    const assetUrl = methods
-                      .getValues()
-                      .assets.find((asset) => asset.id === form.asset_id)?.url;
-                    return (
-                      <Box key={form.index} mb={4}>
-                        <HStack justify="space-between" mb={2}>
-                          <Text>{`フォーム${form.index + 1}`}</Text>
-                          {object.forms.length > 1 && (
-                            <Button
-                              size="sm"
-                              colorScheme="red"
-                              variant="ghost"
-                              onClick={() => removeForm(index, formIndex)}
-                            >
-                              <Icon as={FaTrash} />
-                            </Button>
+
+                  <Box mb={4}>
+                    <FormLabel htmlFor={`objects.${index}.type`}>
+                      タイプ
+                    </FormLabel>
+                    <Select
+                      id={`objects.${index}.type`}
+                      {...methods.register(`objects.${index}.type`)}
+                      value={object.type}
+                    >
+                      <option value="asset">アセット</option>
+                      <option value="text">テキスト</option>
+                    </Select>
+                  </Box>
+
+                  {object.type === "text" ? (
+                    <>
+                      <Box mb={4}>
+                        <FormLabel htmlFor={`objects.${index}.text`}>
+                          テキスト
+                        </FormLabel>
+                        <Input
+                          id={`objects.${index}.text`}
+                          {...methods.register(`objects.${index}.text`)}
+                        />
+                      </Box>
+                      <Box mb={4}>
+                        <FormLabel htmlFor={`objects.${index}.style.fontSize`}>
+                          フォントサイズ
+                        </FormLabel>
+                        <Input
+                          id={`objects.${index}.style.fontSize`}
+                          type="number"
+                          {...methods.register(
+                            `objects.${index}.style.fontSize`,
+                            {
+                              valueAsNumber: true,
+                            },
                           )}
-                        </HStack>
-                        <Box position="relative" mb={2}>
-                          {assetUrl ? (
-                            <Image src={assetUrl} alt={form.name} w="100px" />
-                          ) : (
-                            <Center
+                        />
+                      </Box>
+                      <Box mb={4}>
+                        <FormLabel htmlFor={`objects.${index}.style.fill`}>
+                          色
+                        </FormLabel>
+                        <Input
+                          id={`objects.${index}.style.fill`}
+                          type="color"
+                          {...methods.register(`objects.${index}.style.fill`)}
+                        />
+                      </Box>
+                    </>
+                  ) : (
+                    object.forms?.map((form, formIndex) => {
+                      const assetUrl = methods
+                        .getValues()
+                        .assets.find(
+                          (asset) => asset.id === form.asset_id,
+                        )?.url;
+                      return (
+                        <Box key={form.index} mb={4}>
+                          <HStack justify="space-between" mb={2}>
+                            <Text>{`フォーム${form.index + 1}`}</Text>
+                            {object.forms.length > 1 && (
+                              <Button
+                                size="sm"
+                                colorScheme="red"
+                                variant="ghost"
+                                onClick={() => removeForm(index, formIndex)}
+                              >
+                                <Icon as={FaTrash} />
+                              </Button>
+                            )}
+                          </HStack>
+                          <Box position="relative" mb={2}>
+                            {assetUrl ? (
+                              <Image src={assetUrl} alt={form.name} w="100px" />
+                            ) : (
+                              <Center
+                                w="100px"
+                                h="100px"
+                                bg="gray.100"
+                                borderRadius="md"
+                                border="1px dashed"
+                                borderColor="gray.300"
+                                cursor="pointer"
+                                _hover={{ bg: "gray.200" }}
+                              >
+                                <Icon
+                                  as={FaImage}
+                                  w={8}
+                                  h={8}
+                                  color="gray.400"
+                                />
+                              </Center>
+                            )}
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              position="absolute"
+                              top="0"
+                              left="0"
                               w="100px"
                               h="100px"
-                              bg="gray.100"
-                              borderRadius="md"
-                              border="1px dashed"
-                              borderColor="gray.300"
+                              opacity="0"
                               cursor="pointer"
-                              _hover={{ bg: "gray.200" }}
-                            >
-                              <Icon as={FaImage} w={8} h={8} color="gray.400" />
-                            </Center>
-                          )}
-                          <Input
-                            type="file"
-                            accept="image/*"
-                            position="absolute"
-                            top="0"
-                            left="0"
-                            w="100px"
-                            h="100px"
-                            opacity="0"
-                            cursor="pointer"
-                            onChange={(e) =>
-                              handleImageUpload(e, formIndex, index)
-                            }
-                          />
+                              onChange={(e) =>
+                                handleImageUpload(e, formIndex, index)
+                              }
+                            />
+                          </Box>
+                          <FormLabel
+                            htmlFor={`objects.${index}.forms.${formIndex}.asset_id`}
+                          >
+                            アセット
+                          </FormLabel>
+                          <Select
+                            id={`objects.${index}.forms.${formIndex}.asset_id`}
+                            {...methods.register(
+                              `objects.${index}.forms.${formIndex}.asset_id`,
+                            )}
+                            value={form.asset_id}
+                          >
+                            <option value="">アセットを選択</option>
+                            {assets.map((asset) => (
+                              <option key={asset.id} value={asset.id}>
+                                {asset.name}
+                              </option>
+                            ))}
+                          </Select>
                         </Box>
-                        <FormLabel
-                          htmlFor={`objects.${index}.forms.${formIndex}.asset_id`}
-                        >
-                          アセット
-                        </FormLabel>
-                        <Select
-                          id={`objects.${index}.forms.${formIndex}.asset_id`}
-                          {...methods.register(
-                            `objects.${index}.forms.${formIndex}.asset_id`,
-                          )}
-                          value={form.asset_id}
-                        >
-                          <option value="">アセットを選択</option>
-                          {assets.map((asset) => (
-                            <option key={asset.id} value={asset.id}>
-                              {asset.name}
-                            </option>
-                          ))}
-                        </Select>
-                      </Box>
-                    );
-                  })}
-                  {object.forms.length < 4 && (
+                      );
+                    })
+                  )}
+
+                  {object.type === "asset" && object.forms?.length < 4 && (
                     <Button
                       leftIcon={<Icon as={FaPlus} />}
                       size="sm"
@@ -531,6 +593,7 @@ const defaultValues: GameJSON = {
     {
       id: "object1",
       name: "オブジェクト1",
+      type: "asset",
       forms: [
         {
           index: 0,
