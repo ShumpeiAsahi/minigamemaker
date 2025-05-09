@@ -10,18 +10,18 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Switch,
+  FormControl,
+  FormHelperText,
 } from "@chakra-ui/react";
-import type { Event } from "../../../../../packages/runtime/src/types";
+import type { Event, Object } from "../../../../../packages/runtime/src/types";
 
 type TweenType = "move" | "rotate";
 
 type ActionSettingsProps = {
   type: string;
   value: Event["actions"][0];
-  objects: Array<{
-    id: string;
-    name: string;
-  }>;
+  objects: Object[];
   onChange: (settings: Partial<Event["actions"][0]>) => void;
 };
 
@@ -51,7 +51,7 @@ export function ActionSettings({
         </Box>
       );
 
-    case "tween":
+    case "tween": {
       const tweenType = value.to?.rotation !== undefined ? "rotate" : "move";
       return (
         <VStack spacing={4} align="stretch">
@@ -76,9 +76,11 @@ export function ActionSettings({
               onChange={(e) => {
                 const type = e.target.value as TweenType;
                 if (type === "rotate") {
-                  onChange({ to: { rotation: 6.283 } });
+                  onChange({ to: { rotation: value.to?.rotation ?? 6.283 } });
                 } else {
-                  onChange({ to: { x: 0, y: 0 } });
+                  onChange({
+                    to: { x: value.to?.x ?? 0, y: value.to?.y ?? 0 },
+                  });
                 }
               }}
             >
@@ -149,6 +151,52 @@ export function ActionSettings({
             </NumberInput>
           </Box>
         </VStack>
+      );
+    }
+
+    case "animate":
+      return (
+        <Box>
+          <FormControl>
+            <FormLabel>対象オブジェクト</FormLabel>
+            <Select
+              value={value.target}
+              onChange={(e) => onChange({ target: e.target.value })}
+            >
+              <option value="">オブジェクトを選択</option>
+              {objects.map((object) => (
+                <option key={object.id} value={object.id}>
+                  {object.name}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl mt={4}>
+            <FormLabel>フレームレート（fps）</FormLabel>
+            <Input
+              type="number"
+              value={value.frameRate ?? 10}
+              onChange={(e) =>
+                onChange({ ...value, frameRate: Number(e.target.value) })
+              }
+            />
+          </FormControl>
+
+          <FormControl display="flex" alignItems="center" mt={4}>
+            <FormLabel htmlFor="loop" mb="0">
+              ループ再生
+            </FormLabel>
+            <Switch
+              id="loop"
+              isChecked={value.loop !== false}
+              onChange={(e) => onChange({ ...value, loop: e.target.checked })}
+            />
+            <FormHelperText ml={2} mb={0}>
+              オフにすると1回だけ再生されます
+            </FormHelperText>
+          </FormControl>
+        </Box>
       );
 
     default:

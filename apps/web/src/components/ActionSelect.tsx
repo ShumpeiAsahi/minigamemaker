@@ -1,10 +1,11 @@
 import { Select } from "@chakra-ui/react";
-import { actionOptions, type ActionType } from "../utils/events";
 
-type ActionSelectProps = {
+type ActionType = "show" | "hide" | "tween" | "animate" | "end";
+
+interface ActionSelectProps {
   value: ActionType;
-  onChange: (value: ActionType) => void;
-};
+  onChange: (type: ActionType) => void;
+}
 
 export function ActionSelect({ value, onChange }: ActionSelectProps) {
   return (
@@ -12,11 +13,11 @@ export function ActionSelect({ value, onChange }: ActionSelectProps) {
       value={value}
       onChange={(e) => onChange(e.target.value as ActionType)}
     >
-      {actionOptions.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
+      <option value="show">表示</option>
+      <option value="hide">非表示</option>
+      <option value="tween">移動</option>
+      <option value="animate">アニメーション</option>
+      <option value="end">終了</option>
     </Select>
   );
 }

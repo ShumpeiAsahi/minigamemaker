@@ -150,29 +150,82 @@ export class MicroGame {
     console.log("Executing action:", action);
     switch (action.type) {
       case "show":
-      case "hide":
-        this.sprites.get(action.target)!.visible = action.type === "show";
+        this.sprites.get(action.target)!.visible = true;
         break;
-
+      case "hide":
+        this.sprites.get(action.target)!.visible = false;
+        break;
       case "tween": {
         const sp = this.sprites.get(action.target)!;
         console.log("Tween target:", sp);
         console.log("Tween properties:", action.to);
-        gsap.to(sp, {
-          duration: action.dur / 1000,
-          pixi: action.to as any,
-          ease: "quad.inOut",
-        });
+        const start = {
+          x: sp.x,
+          y: sp.y,
+          rotation: sp.rotation,
+        };
+        const end = action.to;
+        const startTime = Date.now();
+        const duration = action.dur;
+        const animate = () => {
+          const now = Date.now();
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          if (progress < 1) {
+            if (end.x !== undefined) {
+              sp.x = start.x + (end.x - start.x) * progress;
+            }
+            if (end.y !== undefined) {
+              sp.y = start.y + (end.y - start.y) * progress;
+            }
+            if (end.rotation !== undefined) {
+              sp.rotation =
+                start.rotation + (end.rotation - start.rotation) * progress;
+            }
+            requestAnimationFrame(animate);
+          } else {
+            if (end.x !== undefined) sp.x = end.x;
+            if (end.y !== undefined) sp.y = end.y;
+            if (end.rotation !== undefined) sp.rotation = end.rotation;
+          }
+        };
+        animate();
         break;
       }
-
       case "sfx":
         this.audio.get(action.asset)?.play();
         break;
-
       case "end":
         this.reset();
         break;
+      case "animate": {
+        const sprite = this.sprites.get(action.target) as PIXI.Sprite;
+        if (!sprite || !(sprite instanceof PIXI.Sprite)) return;
+
+        const textures = (sprite as any).textures;
+        if (!textures || textures.length <= 1) return;
+
+        let currentFrame = 0;
+        const frameRate = action.frameRate ?? 10;
+        const frameInterval = 1000 / frameRate;
+        let lastFrameTime = Date.now();
+
+        const animate = () => {
+          const now = Date.now();
+          if (now - lastFrameTime >= frameInterval) {
+            currentFrame = (currentFrame + 1) % textures.length;
+            sprite.texture = textures[currentFrame];
+            lastFrameTime = now;
+          }
+
+          if (action.loop !== false || currentFrame < textures.length - 1) {
+            requestAnimationFrame(animate);
+          }
+        };
+
+        animate();
+        break;
+      }
     }
   }
 

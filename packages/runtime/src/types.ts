@@ -45,7 +45,7 @@ export type Asset = {
 
 export type Event = {
   trigger: Trigger;
-  actions: [Action]; // 1つだけだが、将来的に配列拡張できる形
+  actions: Action[];
 };
 
 export type Time = { type: "time"; at: number };
@@ -61,4 +61,10 @@ export type Action =
       dur: number;
     }
   | { type: "sfx"; asset: string }
-  | { type: "end" };
+  | { type: "end" }
+  | {
+      type: "animate";
+      target: string;
+      frameRate?: number;
+      loop?: boolean;
+    };
