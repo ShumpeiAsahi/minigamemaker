@@ -1,5 +1,12 @@
 {
-  "meta": { "width": 540, "height": 960, "bgColor": "#1099bb", "loopMs": 4000, "title": "ゲームタイトル" },
+  "meta": {
+    "width": 540,
+    "height": 960,
+    "bgColor": "#1099bb",
+    "loopMs": 4000,
+    "title": "Sample Game",
+    "user": { "name": "AshDeveloper", "id": null }
+  },
   "assets": [
     { "id": "btn", "url": "/game_kakin.png" }
   ],

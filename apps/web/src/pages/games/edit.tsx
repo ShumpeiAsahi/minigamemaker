@@ -254,6 +254,8 @@ export default function Edit() {
           <Box>
             <FormLabel>ゲームタイトル</FormLabel>
             <Input {...methods.register("meta.title")} />
+            <FormLabel>ユーザー名</FormLabel>
+            <Input {...methods.register("meta.user.name")} />
           </Box>
           <HStack justify="space-between" align="center">
             <Heading size="md">オブジェクト</Heading>

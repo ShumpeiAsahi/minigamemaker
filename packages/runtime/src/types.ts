@@ -7,6 +7,10 @@ export type GameJSON = {
     bgColor: string;
     loopMs: number;
     title: string;
+    user: {
+      name: string;
+      id: string | null;
+    };
   };
   assets: { id: string; url: string }[];
   objects: Object[];

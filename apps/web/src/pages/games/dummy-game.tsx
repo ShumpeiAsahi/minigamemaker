@@ -42,7 +42,7 @@ export default function DummyGame() {
           {!isRunning && (
             <>
               <Text color="white" textShadow="1px 1px 2px black">
-                Dummy Game
+                {game?.data.meta.title}
               </Text>
               <IconButton
                 aria-label="Run game"
@@ -57,8 +57,7 @@ export default function DummyGame() {
                 }}
               />
               <Text color="white" textShadow="1px 1px 2px black">
-                created by: username
-                {/* TODO: ユーザー名を取得する */}
+                created by: {game?.data.meta.user.name}
               </Text>
             </>
           )}
