@@ -34,7 +34,7 @@ export type TextObject = Omit<Object, "forms"> & {
 export type Form = {
   index: number;
   name: string;
-  asset_id?: string;
+  asset_ids: string[];
 };
 
 export type Asset = {

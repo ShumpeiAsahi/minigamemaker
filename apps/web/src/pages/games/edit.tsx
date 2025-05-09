@@ -24,11 +24,7 @@ import gameData from "../../assets/sample-game.json";
 import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
-import {
-  buildActionFormLabel,
-  buildEventFormLabel,
-  buildEventFormValue,
-} from "../../utils/events";
+import { buildEventFormLabel } from "../../utils/events";
 import { AddEventButton } from "../../components/AddEventButton";
 import { TriggerSelect } from "../../components/TriggerSelect";
 import { ActionSelect } from "../../components/ActionSelect";
@@ -87,6 +83,7 @@ export default function Edit() {
     formIndex: number,
     objectIndex: number,
   ) => {
+    console.log("handleImageUpload", event, formIndex, objectIndex);
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -113,39 +110,15 @@ export default function Edit() {
         },
       ]);
 
-      // フォームのasset_idを更新
-      methods.setValue(
-        `objects.${objectIndex}.forms.${formIndex}.asset_id`,
+      // フォームのasset_idsを更新
+      const currentAssetIds =
+        methods.getValues(`objects.${objectIndex}.forms.0.asset_ids`) || [];
+      methods.setValue(`objects.${objectIndex}.forms.0.asset_ids`, [
+        ...currentAssetIds,
         assetId,
-      );
+      ]);
     };
     reader.readAsDataURL(file);
-  };
-
-  const addForm = (objectIndex: number) => {
-    const currentForms = methods.getValues(`objects.${objectIndex}.forms`);
-    if (currentForms.length >= 4) return;
-
-    methods.setValue(`objects.${objectIndex}.forms`, [
-      ...currentForms,
-      {
-        index: currentForms.length,
-        name: `フォーム${currentForms.length + 1}`,
-      },
-    ]);
-  };
-
-  const removeForm = (objectIndex: number, formIndex: number) => {
-    const currentForms = methods.getValues(`objects.${objectIndex}.forms`);
-    const newForms = currentForms.filter((_, index) => index !== formIndex);
-
-    // インデックスを振り直す
-    const updatedForms = newForms.map((form, index) => ({
-      ...form,
-      index,
-    }));
-
-    methods.setValue(`objects.${objectIndex}.forms`, updatedForms);
   };
 
   const addObject = () => {
@@ -158,15 +131,16 @@ export default function Edit() {
       {
         id: newObjectId,
         name: `オブジェクト${currentObjects.length + 1}`,
+        type: "asset",
         forms: [
           {
             index: 0,
             name: "フォーム1",
+            asset_ids: [],
           },
         ],
         x: 0,
         y: 0,
-        anchor: 0,
         interactive: true,
       },
     ]);
@@ -359,97 +333,77 @@ export default function Edit() {
                       </Box>
                     </>
                   ) : (
-                    object.forms?.map((form, formIndex) => {
-                      const assetUrl = methods
-                        .getValues()
-                        .assets.find(
-                          (asset) => asset.id === form.asset_id,
-                        )?.url;
-                      return (
-                        <Box key={form.index} mb={4}>
-                          <HStack justify="space-between" mb={2}>
-                            <Text>{`フォーム${form.index + 1}`}</Text>
-                            {object.forms.length > 1 && (
-                              <Button
-                                size="sm"
-                                colorScheme="red"
-                                variant="ghost"
-                                onClick={() => removeForm(index, formIndex)}
-                              >
-                                <Icon as={FaTrash} />
-                              </Button>
-                            )}
-                          </HStack>
-                          <Box position="relative" mb={2}>
-                            {assetUrl ? (
-                              <Image src={assetUrl} alt={form.name} w="100px" />
-                            ) : (
-                              <Center
-                                w="100px"
-                                h="100px"
-                                bg="gray.100"
-                                borderRadius="md"
-                                border="1px dashed"
-                                borderColor="gray.300"
-                                cursor="pointer"
-                                _hover={{ bg: "gray.200" }}
-                              >
-                                <Icon
-                                  as={FaImage}
-                                  w={8}
-                                  h={8}
-                                  color="gray.400"
+                    <Box mb={4}>
+                      <Box position="relative" mb={2}>
+                        <VStack spacing={2} align="stretch">
+                          {object.forms[0]?.asset_ids?.map(
+                            (assetId, assetIndex) => (
+                              <HStack key={assetId} spacing={2}>
+                                <Image
+                                  src={
+                                    methods
+                                      .getValues()
+                                      .assets.find(
+                                        (asset) => asset.id === assetId,
+                                      )?.url
+                                  }
+                                  alt={`アセット${assetIndex + 1}`}
+                                  w="100px"
                                 />
-                              </Center>
-                            )}
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              position="absolute"
-                              top="0"
-                              left="0"
-                              w="100px"
-                              h="100px"
-                              opacity="0"
-                              cursor="pointer"
-                              onChange={(e) =>
-                                handleImageUpload(e, formIndex, index)
-                              }
-                            />
-                          </Box>
-                          <FormLabel
-                            htmlFor={`objects.${index}.forms.${formIndex}.asset_id`}
+                                <Button
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    const currentAssetIds = methods.getValues(
+                                      `objects.${index}.forms.0.asset_ids`,
+                                    );
+                                    methods.setValue(
+                                      `objects.${index}.forms.0.asset_ids`,
+                                      currentAssetIds.filter(
+                                        (id: string) => id !== assetId,
+                                      ),
+                                    );
+                                  }}
+                                >
+                                  <Icon as={FaTrash} />
+                                </Button>
+                              </HStack>
+                            ),
+                          )}
+                        </VStack>
+                        <Box position="relative" mt={2}>
+                          <Center
+                            w="100px"
+                            h="100px"
+                            bg="gray.100"
+                            borderRadius="md"
+                            border="1px dashed"
+                            borderColor="gray.300"
+                            cursor="pointer"
+                            _hover={{ bg: "gray.200" }}
                           >
-                            アセット
-                          </FormLabel>
-                          <Select
-                            id={`objects.${index}.forms.${formIndex}.asset_id`}
-                            {...methods.register(
-                              `objects.${index}.forms.${formIndex}.asset_id`,
-                            )}
-                            value={form.asset_id}
-                          >
-                            <option value="">アセットを選択</option>
-                            {assets.map((asset) => (
-                              <option key={asset.id} value={asset.id}>
-                                {asset.name}
-                              </option>
-                            ))}
-                          </Select>
+                            <Icon as={FaImage} w={8} h={8} color="gray.400" />
+                          </Center>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            position="absolute"
+                            top="0"
+                            left="0"
+                            w="100px"
+                            h="100px"
+                            opacity="0"
+                            cursor="pointer"
+                            onChange={(e) => handleImageUpload(e, 0, index)}
+                          />
                         </Box>
-                      );
-                    })
-                  )}
-
-                  {object.type === "asset" && object.forms?.length < 4 && (
-                    <Button
-                      leftIcon={<Icon as={FaPlus} />}
-                      size="sm"
-                      onClick={() => addForm(index)}
-                      mb={4}
-                    >
-                      フォームを追加
-                    </Button>
+                      </Box>
+                      <FormLabel>アセット</FormLabel>
+                      <Text fontSize="sm" color="gray.500">
+                        画像をアップロードするか、既存のアセットを選択してください
+                      </Text>
+                    </Box>
                   )}
                 </AccordionPanel>
               </AccordionItem>

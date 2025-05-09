@@ -111,13 +111,20 @@ export class MicroGame {
         this.app.stage.addChild(txt);
       } else {
         // 通常のObjectの場合
-        const tex = this.textures.get(o.forms[0].asset_id)!;
+        const assetIds = o.forms[0].asset_ids;
+        if (assetIds.length === 0) return;
+
+        const tex = this.textures.get(assetIds[0])!;
         const sp = new PIXI.Sprite(tex);
         sp.position.set(o.x, o.y);
         sp.anchor.set(0.5);
         sp.visible = this.isEditorMode;
         if (o.interactive) sp.eventMode = "static";
         if (o.interactive) sp.cursor = "pointer";
+
+        // アニメーションテクスチャの配列を保存
+        const textures = assetIds.map((id) => this.textures.get(id)!);
+        (sp as any).textures = textures;
 
         this.sprites.set(o.id, sp);
         this.app.stage.addChild(sp);

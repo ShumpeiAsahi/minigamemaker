@@ -8,7 +8,7 @@
     "user": { "name": "AshDeveloper", "id": null }
   },
   "assets": [
-    { "id": "btn", "url": "/game_kakin.png" }
+    { "id": "btn", "url": "/game_kakin.png", "name": "ボタン" }
   ],
   "objects": [
     {
@@ -16,7 +16,7 @@
       "name": "ボタン",
       "type": "asset",
       "forms": [
-        { "index": 0, "asset_id": "btn" }
+        { "index": 0, "name": "フォーム1", "asset_ids": ["btn"] }
       ],
       "x": 270,
       "y": 480,
