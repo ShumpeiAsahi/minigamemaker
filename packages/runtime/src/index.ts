@@ -22,8 +22,24 @@ export class MicroGame {
     private isEditorMode = false,
   ) {}
 
+  private setupBackgroundImage() {
+    const bgImageAsset = this.data.assets.find((a) => a.id === "bgImage");
+    if (bgImageAsset) {
+      const bgTexture = this.textures.get(bgImageAsset.id);
+      if (bgTexture) {
+        const bgSprite = new PIXI.Sprite(bgTexture);
+        bgSprite.width = this.data.meta.width;
+        bgSprite.height = this.data.meta.height;
+        bgSprite.anchor.set(0, 0);
+        bgSprite.position.set(0, 0);
+        this.app.stage.addChildAt(bgSprite, 0);
+      }
+    }
+  }
+
   async ready() {
     const { width, height, bgColor } = this.data.meta;
+    console.log("Game meta:", { width, height, bgColor });
 
     this.app = new PIXI.Application({
       width,
@@ -35,6 +51,7 @@ export class MicroGame {
     this.mount.appendChild(this.app.view as HTMLCanvasElement);
 
     await this.loadAssets();
+    this.setupBackgroundImage();
     this.buildObjects();
   }
 
@@ -78,20 +95,29 @@ export class MicroGame {
   }
 
   private async loadAssets(): Promise<void> {
-    const imageUrls: string[] = [];
-    this.data.assets.forEach((a) => {
-      if (/\.(png|jpg|gif)$/i.test(a.url) || a.url.startsWith("data:image/")) {
-        imageUrls.push(a.url);
-      } else if (/\.(wav|mp3)$/i.test(a.url))
-        this.audio.set(a.id, new Audio(a.url));
-    });
+    // 画像アセットのURLを収集（重複を除去）
+    const uniqueUrls = new Set<string>();
+    const assetIdToUrl = new Map<string, string>();
 
-    await Assets.load(imageUrls);
+    for (const asset of this.data.assets) {
+      if (
+        /\.(png|jpg|gif)$/i.test(asset.url) ||
+        asset.url.startsWith("data:image/")
+      ) {
+        uniqueUrls.add(asset.url);
+        assetIdToUrl.set(asset.id, asset.url);
+      } else if (/\.(wav|mp3)$/i.test(asset.url)) {
+        this.audio.set(asset.id, new Audio(asset.url));
+      }
+    }
 
-    for (const url of imageUrls) {
+    // ユニークなURLのテクスチャをロード
+    await Assets.load(Array.from(uniqueUrls));
+
+    // アセットIDごとにテクスチャを設定
+    for (const [assetId, url] of assetIdToUrl) {
       const tex = Assets.get(url) as PIXI.Texture;
-      const id = this.data.assets.find((a) => a.url === url)!.id;
-      this.textures.set(id, tex);
+      this.textures.set(assetId, tex);
     }
   }
 
@@ -238,6 +264,8 @@ export class MicroGame {
     this.app.stage.removeChildren();
     this.sprites.clear();
     this.events = [...this.data.events];
+
+    this.setupBackgroundImage();
     this.buildObjects();
     this.startAt = performance.now();
 

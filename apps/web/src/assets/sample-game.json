@@ -8,6 +8,7 @@
     "user": { "name": "AshDeveloper", "id": null }
   },
   "assets": [
+    { "id": "bgImage", "url": "/game_kakin.png", "name": "背景画像" },
     { "id": "btn", "url": "/game_kakin.png", "name": "ボタン" }
   ],
   "objects": [

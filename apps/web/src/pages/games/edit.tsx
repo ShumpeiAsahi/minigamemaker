@@ -20,7 +20,6 @@ import {
 import { Editor } from "../../../../../packages/runtime/src/editor";
 import { MicroGame } from "../../../../../packages/runtime/src";
 import { useEffect, useRef, useState } from "react";
-import gameData from "../../assets/sample-game.json";
 import type { GameJSON } from "../../../../../packages/runtime/src/types";
 import { useForm, FormProvider, useWatch } from "react-hook-form";
 import { FaImage, FaPlus, FaTrash } from "react-icons/fa";
@@ -36,7 +35,7 @@ export default function Edit() {
   const previewRef = useRef<HTMLDivElement>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const methods = useForm<GameJSON>({
-    defaultValues: gameData,
+    defaultValues: defaultValues,
   });
 
   const objects = useWatch({ control: methods.control, name: "objects" });
@@ -68,11 +67,11 @@ export default function Edit() {
     console.log(currentValues);
     const hasAssetChanges = currentValues.assets.some(
       (asset, index) =>
-        asset.id !== gameData.assets[index]?.id ||
-        asset.url !== gameData.assets[index]?.url,
+        asset.id !== defaultValues.assets[index]?.id ||
+        asset.url !== defaultValues.assets[index]?.url,
     );
     const hasObjectChanges =
-      currentValues.objects.length !== gameData.objects.length;
+      currentValues.objects.length !== defaultValues.objects.length;
     if (hasAssetChanges || hasObjectChanges) {
       editorRef.current.updateGameJSON(currentValues);
     }
@@ -230,6 +229,108 @@ export default function Edit() {
             <Input {...methods.register("meta.title")} />
             <FormLabel>ユーザー名</FormLabel>
             <Input {...methods.register("meta.user.name")} />
+            <FormLabel mt={4}>背景画像</FormLabel>
+            <Box position="relative" mb={2}>
+              <VStack spacing={2} align="stretch">
+                {(() => {
+                  const bgImage = methods
+                    .getValues()
+                    .assets.find((a) => a.id === "bgImage");
+                  if (bgImage) {
+                    return (
+                      <HStack spacing={2}>
+                        <Image
+                          src={bgImage.url}
+                          alt="背景画像"
+                          w="200px"
+                          h="auto"
+                          objectFit="contain"
+                        />
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          variant="ghost"
+                          onClick={() => {
+                            const currentAssets = methods.getValues("assets");
+                            methods.setValue(
+                              "assets",
+                              currentAssets.filter((a) => a.id !== "bgImage"),
+                            );
+                          }}
+                        >
+                          <Icon as={FaTrash} />
+                        </Button>
+                      </HStack>
+                    );
+                  }
+                  return (
+                    <Box position="relative">
+                      <Center
+                        w="200px"
+                        h="100px"
+                        bg="gray.100"
+                        borderRadius="md"
+                        border="1px dashed"
+                        borderColor="gray.300"
+                        cursor="pointer"
+                        _hover={{ bg: "gray.200" }}
+                      >
+                        <Icon as={FaImage} w={8} h={8} color="gray.400" />
+                      </Center>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        position="absolute"
+                        top="0"
+                        left="0"
+                        w="200px"
+                        h="100px"
+                        opacity="0"
+                        cursor="pointer"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          const reader = new FileReader();
+                          reader.onload = (e) => {
+                            const base64 = e.target?.result as string;
+                            if (!base64) return;
+
+                            const currentAssets = methods.getValues("assets");
+                            const existingBgImage = currentAssets.find(
+                              (a) => a.id === "bgImage",
+                            );
+
+                            if (existingBgImage) {
+                              // 既存の背景画像を更新
+                              methods.setValue(
+                                "assets",
+                                currentAssets.map((a) =>
+                                  a.id === "bgImage"
+                                    ? { ...a, url: base64, name: file.name }
+                                    : a,
+                                ),
+                              );
+                            } else {
+                              // 新しい背景画像を追加
+                              methods.setValue("assets", [
+                                ...currentAssets,
+                                {
+                                  id: "bgImage",
+                                  name: file.name,
+                                  url: base64,
+                                },
+                              ]);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                    </Box>
+                  );
+                })()}
+              </VStack>
+            </Box>
           </Box>
           <HStack justify="space-between" align="center">
             <Heading size="md">オブジェクト</Heading>
@@ -541,7 +642,14 @@ export default function Edit() {
 }
 
 const defaultValues: GameJSON = {
-  meta: { width: 540, height: 960, bgColor: "#1099bb", loopMs: 4000 },
+  meta: {
+    width: 540,
+    height: 960,
+    bgColor: "#1099bb",
+    loopMs: 4000,
+    title: "",
+    user: { name: "", id: null },
+  },
   assets: [],
   objects: [
     {
@@ -552,12 +660,11 @@ const defaultValues: GameJSON = {
         {
           index: 0,
           name: "フォーム1",
+          asset_ids: [],
         },
       ],
       x: 0,
       y: 0,
-      anchor: 0.5,
-      interactive: true,
     },
   ],
   events: [],
